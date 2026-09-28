@@ -50,6 +50,6 @@ def TraceMinAtLeast {n : ℕ} (N : PDLattice K n) (c : ℝ) : Prop :=
 `𝔳M = [M^# : M]` by [OMeara63, 82:11]).
 Note: in some Mathlib versions `relindex` is spelled `relIndex`. -/
 noncomputable def volumeNorm {m : ℕ} (M : PDLattice K m) : ℕ :=
-  (M.L.toAddSubgroup).relindex (dual M.B M.L).toAddSubgroup
+  (M.L.toAddSubgroup).relIndex (dual M.B M.L).toAddSubgroup
 
 end LatticesLean.PDLattice
