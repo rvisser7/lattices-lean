@@ -1,42 +1,48 @@
 # lattices-lean
 
 Formalising the arithmetic theory of quadratic lattices over rings of integers
-(`𝓞 K`-lattices) in Lean 4 with Mathlib: foundations following O'Meara's
-*Introduction to Quadratic Forms*, local and global theory, reduction theory,
-local–global principles, universality, and results from our papers.
+(`𝓞 K`-lattices) in Lean 4 with Mathlib: foundations following O'Meara's *Introduction to
+Quadratic Forms*, local and global theory, reduction theory, local–global principles,
+universality, and results from our papers.
 
-**Status:** skeleton. Files contain definitions and theorem *statements*; `sorry`
-marks results still to be proved. See [`ROADMAP.md`](ROADMAP.md).
+**Status:** skeleton. The library builds against the pinned Mathlib version. Files contain
+definitions and theorem *statements*; `sorry` marks results still to be proved. See
+[`ROADMAP.md`](ROADMAP.md).
 
 ## Setting up
 
-1. Install VS Code, the **Lean 4** extension, and `git`.
-2. Create a fresh Mathlib project (this pins matching Lean and Mathlib versions):
-   ```bash
-   lake +leanprover-community/mathlib4:lean-toolchain new lattices-lean math
+1. Install [elan](https://github.com/leanprover/elan) (the Lean toolchain manager), VS Code with
+   the **Lean 4** extension, and `git`. The
+   [Lean installation guide](https://leanprover-community.github.io/get_started.html) covers all three.
+2. Clone the repository:
+
+   ```
+   git clone https://github.com/rvisser7/lattices-lean.git
    cd lattices-lean
    ```
-3. Copy the contents of this archive into that folder, **overwriting** `lakefile.toml` and
-   `LatticesLean.lean`, and delete the generated `LatticesLean/Basic.lean`.
-   (The provided `lakefile.toml` adds the `LatticesCounterexamples` library; Mathlib's version is pinned
-   in `lake-manifest.json`, which `lake new` created.)
-4. Download precompiled Mathlib and build:
-   ```bash
+
+3. Download precompiled Mathlib and build:
+
+   ```
    lake exe cache get
    lake build
    ```
-5. Push to GitHub. `.github/workflows/ci.yml` builds everything on every push and lists the
-   remaining `sorry`s on the run's summary page.
 
-The files were written without being compiled. Expect a few small errors from Mathlib API
-names; fix them (or ask on Zulip) before adding new material.
+   The Lean version is pinned in `lean-toolchain` and the Mathlib version in `lake-manifest.json`,
+   so elan and Lake fetch the right versions automatically. A successful build shows only
+   `declaration uses 'sorry'` warnings.
+
+4. Open the folder in VS Code (open the folder itself, not an individual file).
+
+`.github/workflows/ci.yml` builds everything on every push and pull request, and lists the
+remaining `sorry`s on the run's summary page.
 
 ## Layout
 
 The library is organised by **mathematical subject**, not by source.
 
 | Folder | Contents |
-|---|---|
+| --- | --- |
 | `LatticesLean/ForMathlib/` | General lemmas that belong in Mathlib, mirroring Mathlib's paths and namespaces (valuations, number theory, geometry of numbers, Dickson's lemma, Euler transform, …) |
 | `LatticesLean/Foundations/` | Quadratic spaces and lattices over a Dedekind domain: scale, norm, dual, unimodularity, representations, isometries, orthogonal splittings; bridge to Mathlib's `QuadraticForm` |
 | `LatticesLean/Forms/` | Quadratic forms over fields: Witt's theorem, Witt groups, finite/local/global fields, Hilbert symbol and reciprocity, Hasse–Minkowski |
@@ -75,29 +81,39 @@ status (proved / stated / defined / alias). CI prints the summary on each run.
 
 ## Conventions
 
-* **Where results go.** Results others would cite (classical theorems, and results of our papers
+- **Where results go.** Results others would cite (classical theorems, and results of our papers
   once stable) go in the thematic folders under descriptive names, with the source cited in the
   docstring in the form `[KEY, locator]`, e.g. `**[HKK78, Theorem 3]**`, so that
   `scripts/coverage.py` can find it. `Papers/` files only restate results in the paper's
   numbering via `alias`, plus genuinely paper-specific material. A new paper may be developed
   inside `Papers/` while in flux, then moved into the thematic folders once stable.
-* **`ForMathlib/`** uses Mathlib's namespaces (e.g. `Nat.eulerTransform`), so files can be
+- **`ForMathlib/`** uses Mathlib's namespaces (e.g. `Nat.eulerTransform`), so files can be
   upstreamed with minimal changes.
-* **Names** follow Mathlib's naming conventions: they describe the statement
+- **Names** follow Mathlib's naming conventions: they describe the statement
   (`exists_bound_degree_discr_of_minRankNUniversal_lt`), not its number.
-* A quadratic space is `(V, B)` with `B` a **symmetric bilinear form** and `Q x = B x x`
-  (O'Meara's convention). We do not use Mathlib's `QuadraticForm` directly, whose associated
-  bilinear form differs by a factor of 2.
-* Lattices are `Submodule R V` and are **not** assumed free.
-* "All lattices of rank `n`" is realised as `PDLattice K n`: a form and a lattice on `K^n`.
-* Local representation is defined by congruences modulo `𝔭^k` for all `k` (equivalent to
+- **Bilinear forms.** A quadratic space is `(V, B)` with `B` a symmetric bilinear form and
+  `Q x = B x x` (O'Meara's convention), and `B` is the primary data. This is compatible with
+  Mathlib: `QuadraticMap.associated` includes a factor `⅟2` and satisfies
+  `associated Q x x = Q x`, so over a field of characteristic ≠ 2 it recovers `B`. The object
+  that differs by a factor of 2 is Mathlib's polar form
+  `QuadraticMap.polar Q x y = Q (x + y) - Q x - Q y`, which equals `2 B x y`. Keep this in
+  mind when defining the norm and scale of a lattice, where the factor of 2 matters at
+  dyadic primes. The translation lives in `Foundations/`.
+- Lattices are `Submodule R V` and are **not** assumed free.
+- "All lattices of rank `n`" is realised as `PDLattice K n`: a form and a lattice on `K^n`.
+- Local representation is defined by congruences modulo `𝔭^k` for all `k` (equivalent to
   representation over `𝓞_𝔭` for integral lattices); proving the equivalence is on the roadmap.
-* Deep literature results we do not (yet) prove enter as explicitly named hypotheses, never as
+- Deep literature results we do not (yet) prove enter as explicitly named hypotheses, never as
   silent `axiom`s.
+- **Sanity checks for definitions.** A wrong definition compiles just as well as a right one,
+  and makes every theorem about it vacuous or false. Accompany new definitions with small
+  `example`s or lemmas that would fail if the definition were off, e.g. that `I_n` over `ℤ` is
+  unimodular, or that `𝔫L ⊆ 𝔰L` and `2𝔰L ⊆ 𝔫L`.
 
 ## Contributing
 
-* Work on a branch and open a pull request; CI must pass.
-* Replace `sorry`s one at a time. `exact?`, `apply?`, and
+- Work on a branch and open a pull request; CI must pass.
+- Replace `sorry`s one at a time. `exact?`, `apply?`, and
   [Loogle](https://loogle.lean-lang.org) help find Mathlib lemmas.
-* Questions: the Lean Zulip (`#new members`, `#number theory`).
+- When reviewing, check definitions and theorem statements as carefully as proofs.
+- Questions: the Lean Zulip (`#new members`, `#number theory`).
